@@ -111,12 +111,18 @@ end component;
 signal slv_reg0, slv_reg1, slv_reg2, slv_reg3 : std_logic_vector(C_S00_AXI_DATA_WIDTH - 1 downto 0) := (others => '0'); 
 
 -- Synchronized gain (Q4.12 fixed point)
-signal gain_meta, gain_sync : unsigned(15 downto 0) := (others => '0'); 
+signal r_gain_meta, r_gain_sync, g_gain_meta, g_gain_sync, b_gain_meta, b_gain_sync : unsigned(15 downto 0) := (others => '0'); 
 
 attribute ASYNC_REG : string; 
-attribute ASYNC_REG of gain_meta : signal is "TRUE"; 
-attribute ASYNC_REG of gain_sync : signal is "TRUE";
+attribute ASYNC_REG of r_gain_meta : signal is "TRUE"; 
+attribute ASYNC_REG of r_gain_sync : signal is "TRUE";
+attribute ASYNC_REG of g_gain_meta : signal is "TRUE"; 
+attribute ASYNC_REG of g_gain_sync : signal is "TRUE";
+attribute ASYNC_REG of b_gain_meta : signal is "TRUE"; 
+attribute ASYNC_REG of b_gain_sync : signal is "TRUE";
 attribute ASYNC_REG of slv_reg0 : signal is "TRUE";
+attribute ASYNC_REG of slv_reg1 : signal is "TRUE";
+attribute ASYNC_REG of slv_reg2 : signal is "TRUE";
 
 signal r_in_reg, g_in_reg, b_in_reg : unsigned(7 downto 0) := (others => '0'); 
 signal v0, u0, l0 : std_logic; -- axi-stream signal
@@ -184,11 +190,23 @@ cdc_proc: process (s00_axis_aclk)
 begin 
     if (rising_edge(s00_axis_aclk)) then 
         if (s00_axis_aresetn = '0' or m00_axis_aresetn = '0') then 
-            gain_meta <= x"1000";
-            gain_sync <= x"1000"; 
+            r_gain_meta <= x"1000";
+            r_gain_sync <= x"1000"; 
+            
+            g_gain_meta <= x"1000";
+            g_gain_sync <= x"1000"; 
+            
+            b_gain_meta <= x"1000";
+            b_gain_sync <= x"1000"; 
         else 
-            gain_sync <= gain_meta; 
-            gain_meta <= unsigned(slv_reg0(15 downto 0));
+            r_gain_sync <= r_gain_meta; 
+            r_gain_meta <= unsigned(slv_reg0(15 downto 0));
+            
+            g_gain_sync <= g_gain_meta; 
+            g_gain_meta <= unsigned(slv_reg1(15 downto 0));
+            
+            b_gain_sync <= b_gain_meta; 
+            b_gain_meta <= unsigned(slv_reg2(15 downto 0));
         end if; 
     end if; 
 end process;
@@ -231,9 +249,9 @@ begin
             l1 <= '0'; 
             k1 <= (others => '0');
         elsif m00_axis_tready = '1' then 
-            r_prod <= resize(r_in_reg * gain_sync, 24); 
-            g_prod <= resize(g_in_reg * gain_sync, 24); 
-            b_prod <= resize(b_in_reg * gain_sync, 24); 
+            r_prod <= resize(r_in_reg * r_gain_sync, 24); 
+            g_prod <= resize(g_in_reg * g_gain_sync, 24); 
+            b_prod <= resize(b_in_reg * b_gain_sync, 24); 
             
             v1 <= v0; 
             u1 <= u0; 

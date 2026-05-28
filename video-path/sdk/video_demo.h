@@ -74,7 +74,7 @@ void DrawGradient   (u8 *frame, u32 width, u32 height, u32 stride);
 void DrawSolidColor (u8 *frame, u32 width, u32 height, u32 stride,
                      u8 r, u8 g, u8 b);
 
-void FilterSetGain(u32 gain_q4_12);
+void FilterSetGain(u32, u32, u32);
 void FilterSetMode(FilterMode mode);
 void BrightnessDemoTick(void);
 

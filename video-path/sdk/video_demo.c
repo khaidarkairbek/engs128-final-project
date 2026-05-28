@@ -40,8 +40,12 @@
  * from xparameters.h, commented out below).
  */
 #define FILTER_BASE_ADDR        XPAR_AUDIO_VIDEO_FILTER_0_BASEADDR
-#define FILTER_GAIN_REG_OFFSET  0x00
-#define FILTER_GAIN_REG         (FILTER_BASE_ADDR + FILTER_GAIN_REG_OFFSET)
+#define FILTER_R_GAIN_REG_OFFSET  0x00
+#define FILTER_G_GAIN_REG_OFFSET  0x04
+#define FILTER_B_GAIN_REG_OFFSET  0x08
+#define FILTER_R_GAIN_REG         (FILTER_BASE_ADDR + FILTER_R_GAIN_REG_OFFSET)
+#define FILTER_G_GAIN_REG         (FILTER_BASE_ADDR + FILTER_G_GAIN_REG_OFFSET)
+#define FILTER_B_GAIN_REG         (FILTER_BASE_ADDR + FILTER_B_GAIN_REG_OFFSET)
 
 /* Q4.12 gain presets */
 #define GAIN_BLACK              0x0000   /* 0.0x */
@@ -74,47 +78,149 @@ u8 *pFrames[DISPLAY_NUM_FRAMES];
 /*  Filter control                                              */
 /* ------------------------------------------------------------ */
 
-void FilterSetGain(u32 gain_q4_12)
+void FilterSetGain(u32 r_gain_q4_12, u32 g_gain_q4_12, u32 b_gain_q4_12)
 {
-    Xil_Out32(FILTER_GAIN_REG, gain_q4_12);
+    Xil_Out32(FILTER_R_GAIN_REG, r_gain_q4_12);
+    Xil_Out32(FILTER_G_GAIN_REG, g_gain_q4_12);
+    Xil_Out32(FILTER_B_GAIN_REG, b_gain_q4_12);
 }
 
-static u32 current_gain = GAIN_UNITY;
+static u32 current_r_gain = GAIN_UNITY;
+static u32 current_g_gain = GAIN_UNITY;
+static u32 current_b_gain = GAIN_UNITY;
+
+void BrightnessSingleChange(char key)
+{
+	u32 next;
+	switch (key) {
+	case 'r':
+		next = (current_r_gain * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+		if (next > BRIGHTNESS_MAX_Q412) next = BRIGHTNESS_MAX_Q412;
+		current_r_gain = next;
+		break;
+	case 't':
+		next = (current_r_gain * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+		if (next < BRIGHTNESS_MIN_Q412) next = BRIGHTNESS_MIN_Q412;
+		current_r_gain = next;
+		break;
+	case 'g':
+		next = (current_g_gain * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+		if (next > BRIGHTNESS_MAX_Q412) next = BRIGHTNESS_MAX_Q412;
+		current_g_gain = next;
+		break;
+	case 'h':
+		next = (current_g_gain * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+		if (next < BRIGHTNESS_MIN_Q412) next = BRIGHTNESS_MIN_Q412;
+		current_g_gain = next;
+		break;
+	case 'b':
+		next = (current_b_gain * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+		if (next > BRIGHTNESS_MAX_Q412) next = BRIGHTNESS_MAX_Q412;
+		current_b_gain = next;
+		break;
+	case 'n':
+		next = (current_b_gain * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+		if (next < BRIGHTNESS_MIN_Q412) next = BRIGHTNESS_MIN_Q412;
+		current_b_gain = next;
+		break;
+	default:
+		return;
+	}
+
+	FilterSetGain(current_r_gain, current_g_gain, current_b_gain);
+	xil_printf("	brighter: gain = [r = 0x%04X (%d.%03dx); g = 0x%04X (%d.%03dx); b = 0x%04X (%d.%03dx)]\n\r",
+				(unsigned int) current_r_gain,
+				(unsigned int) (current_r_gain >> 12),
+				(unsigned int) (((current_r_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_g_gain,
+				(unsigned int) (current_g_gain >> 12),
+				(unsigned int) (((current_g_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_b_gain,
+				(unsigned int) (current_b_gain >> 12),
+				(unsigned int) (((current_b_gain & 0xFFF) * 1000) >> 12)
+	);
+}
 
 void BrightnessUp(void)
 {
-	u32 next = (current_gain * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+	u32 next = (current_r_gain * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
 	if (next > BRIGHTNESS_MAX_Q412) {
 		next = BRIGHTNESS_MAX_Q412;
 	}
 
-	current_gain = next;
-	FilterSetGain(current_gain);
-	xil_printf("	brighter: gain = 0x%04X (%d.%03dx)\n\r",
-				(unsigned int) current_gain,
-				(unsigned int) (current_gain >> 12),
-				(unsigned int) (((current_gain & 0xFFF) * 1000) >> 12));
+	current_r_gain = next;
+
+	next = (next * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+	if (next > BRIGHTNESS_MAX_Q412) {
+		next = BRIGHTNESS_MAX_Q412;
+	}
+
+	current_g_gain = next;
+
+	next = (next * BRIGHTNESS_STEP_NUM) / BRIGHTNESS_STEP_DEN;
+	if (next > BRIGHTNESS_MAX_Q412) {
+		next = BRIGHTNESS_MAX_Q412;
+	}
+
+	current_b_gain = next;
+
+	FilterSetGain(current_r_gain, current_g_gain, current_b_gain);
+	xil_printf("	brighter: gain = [r = 0x%04X (%d.%03dx); g = 0x%04X (%d.%03dx); b = 0x%04X (%d.%03dx)]\n\r",
+				(unsigned int) current_r_gain,
+				(unsigned int) (current_r_gain >> 12),
+				(unsigned int) (((current_r_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_g_gain,
+				(unsigned int) (current_g_gain >> 12),
+				(unsigned int) (((current_g_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_b_gain,
+				(unsigned int) (current_b_gain >> 12),
+				(unsigned int) (((current_b_gain & 0xFFF) * 1000) >> 12)
+	);
 }
 
 void BrightnessDown(void)
 {
-	u32 next = (current_gain * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+	u32 next = (current_r_gain * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
 	if (next < BRIGHTNESS_MIN_Q412) {
 		next = BRIGHTNESS_MIN_Q412;
 	}
 
-	current_gain = next;
-	FilterSetGain(current_gain);
-	xil_printf("	dimmer: gain = 0x%04X (%d.%03dx)\n\r",
-				(unsigned int) current_gain,
-				(unsigned int) (current_gain >> 12),
-				(unsigned int) (((current_gain & 0xFFF) * 1000) >> 12));
+	current_r_gain = next;
+
+	next = (next * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+	if (next < BRIGHTNESS_MIN_Q412) {
+		next = BRIGHTNESS_MIN_Q412;
+	}
+
+	current_g_gain = next;
+
+	next = (next * BRIGHTNESS_STEP_DEN) / BRIGHTNESS_STEP_NUM;
+	if (next < BRIGHTNESS_MIN_Q412) {
+		next = BRIGHTNESS_MIN_Q412;
+	}
+
+	current_b_gain = next;
+
+	FilterSetGain(current_r_gain, current_g_gain, current_b_gain);
+	xil_printf("	dimmer: gain = [r = 0x%04X (%d.%03dx); g = 0x%04X (%d.%03dx); b = 0x%04X (%d.%03dx)]\n\r",
+				(unsigned int) current_r_gain,
+				(unsigned int) (current_r_gain >> 12),
+				(unsigned int) (((current_r_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_g_gain,
+				(unsigned int) (current_g_gain >> 12),
+				(unsigned int) (((current_g_gain & 0xFFF) * 1000) >> 12),
+				(unsigned int) current_b_gain,
+				(unsigned int) (current_b_gain >> 12),
+				(unsigned int) (((current_b_gain & 0xFFF) * 1000) >> 12)
+	);
 }
 
 void BrightnessReset(void)
 {
-	current_gain = GAIN_UNITY;
-	FilterSetGain(current_gain);
+	current_r_gain = GAIN_UNITY;
+	current_g_gain = GAIN_UNITY;
+	current_b_gain = GAIN_UNITY;
+	FilterSetGain(current_r_gain, current_g_gain, current_b_gain);
 	xil_printf("	brightness reset: gain = 0x1000 (1.000x)\n\r");
 }
 
@@ -300,29 +406,26 @@ void DemoRun(void)
         {
             case '1':
                 FilterSetMode(MODE_PASSTHROUGH);
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
             case '2':
                 FilterSetMode(MODE_BRIGHTNESS);
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
+            case 'r':
+            case 't':
+            case 'g':
+            case 'h':
             case 'b':
-                if (currentMode == MODE_BRIGHTNESS) {
-                    BrightnessUp();
-                } else {
-                    xil_printf("\n\r(Switch to brightness mode first with '2')\n\r");
-                }
-                TimerDelay(500000);
-                break;
-            case 'd':
+            case 'n':
             	if (currentMode == MODE_BRIGHTNESS) {
-					BrightnessDown();
+					BrightnessSingleChange(userInput);
 				} else {
 					xil_printf("\n\r(Switch to brightness mode first with '2')\n\r");
 				}
-				TimerDelay(500000);
+				TimerDelay(100000);
             	break;
 
             case 'c':
@@ -331,16 +434,16 @@ void DemoRun(void)
                               dispCtrl.vMode.height,
                               DEMO_STRIDE);
                 xil_printf("\n\rDrew color bars\n\r");
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
-            case 'g':
+            case 'd':
                 DrawGradient(pFrames[dispCtrl.curFrame],
                              dispCtrl.vMode.width,
                              dispCtrl.vMode.height,
                              DEMO_STRIDE);
                 xil_printf("\n\rDrew gradient\n\r");
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
             case 'w':
@@ -349,7 +452,7 @@ void DemoRun(void)
                                dispCtrl.vMode.height,
                                DEMO_STRIDE, 255, 255, 255);
                 xil_printf("\n\rDrew solid white\n\r");
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
             case 'k':
@@ -358,7 +461,7 @@ void DemoRun(void)
                                dispCtrl.vMode.height,
                                DEMO_STRIDE, 0, 0, 0);
                 xil_printf("\n\rDrew solid black\n\r");
-                TimerDelay(500000);
+                TimerDelay(100000);
                 break;
 
             case 'q':
@@ -366,7 +469,7 @@ void DemoRun(void)
 
             default:
                 xil_printf("\n\rInvalid selection");
-                TimerDelay(500000);
+                TimerDelay(100000);
         }
     }
 }
@@ -391,12 +494,13 @@ void DemoPrintMenu(void)
     xil_printf("Filter:\n\r");
     xil_printf("  1 - Passthrough  (gain = 1.0x)\n\r");
     xil_printf("  2 - Brightness   \n\r");
-    xil_printf("  b - Step brightness up\n\r");
-    xil_printf("  d - Step brightness down\n\r");
+    xil_printf("  r, t - Red step brightness up/down\n\r");
+    xil_printf("  g, h - Green step brightness up/down\n\r");
+    xil_printf("  b, n - Red step brightness up/down\n\r");
     xil_printf("\n\r");
     xil_printf("Test pattern:\n\r");
     xil_printf("  c - Color bars\n\r");
-    xil_printf("  g - Gradient (black -> white)\n\r");
+    xil_printf("  d - Gradient (black -> white)\n\r");
     xil_printf("  w - Solid white\n\r");
     xil_printf("  k - Solid black\n\r");
     xil_printf("\n\r");
