@@ -27,9 +27,10 @@ entity fft_wrapper is
 generic (
     C_AXI_STREAM_DATA_WIDTH : integer := 32;
     AUDIO_DATA_WIDTH : integer := 24; 
-    FFT_LENGTH : integer := 1024; 
-    FFT_LENGTH_LOG2 : integer := 10;
-    MAG_WIDTH : integer := 32
+    FFT_LENGTH : integer := 256; 
+    FFT_LENGTH_LOG2 : integer := 8;
+    MAG_WIDTH : integer := 32; 
+    BRAM_READ_ADDR_WIDTH : integer := 13
 );
 port(
     aclk                : in std_logic; 
@@ -49,7 +50,7 @@ port(
     
     bram_left_fft_clk           : in std_logic; 
     bram_left_fft_en            : in std_logic; 
-    bram_left_fft_addr          : in std_logic_vector(12 downto 0); 
+    bram_left_fft_addr          : in std_logic_vector(BRAM_READ_ADDR_WIDTH - 1 downto 0); 
     bram_left_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0); 
     bram_left_fft_din           : in std_logic_vector(MAG_WIDTH - 1 downto 0); -- ignored
     bram_left_fft_rst           : in std_logic; -- ignored
@@ -57,7 +58,7 @@ port(
     
     bram_right_fft_clk           : in std_logic; 
     bram_right_fft_en            : in std_logic; 
-    bram_right_fft_addr          : in std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0); 
+    bram_right_fft_addr          : in std_logic_vector(BRAM_READ_ADDR_WIDTH - 1 downto 0); 
     bram_right_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0);
     bram_right_fft_din           : in std_logic_vector(MAG_WIDTH - 1 downto 0); -- ignored
     bram_right_fft_rst           : in std_logic; -- ignored
@@ -72,12 +73,12 @@ component fft_bram IS
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
     wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    addra : IN STD_LOGIC_VECTOR(FFT_LENGTH_LOG2 - 1 DOWNTO 0);
+    dina : IN STD_LOGIC_VECTOR(MAG_WIDTH - 1 DOWNTO 0);
     clkb : IN STD_LOGIC;
     enb : IN STD_LOGIC;
-    addrb : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-    doutb : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+    addrb : IN STD_LOGIC_VECTOR(FFT_LENGTH_LOG2 - 1 DOWNTO 0);
+    doutb : OUT STD_LOGIC_VECTOR(MAG_WIDTH - 1 DOWNTO 0)
   );
 END component;
 
@@ -90,15 +91,15 @@ port(
     s_axis_config_tready    : out std_logic; 
     s_axis_config_tvalid    : in std_logic; 
     
-    s_axis_data_tdata       : in std_logic_vector(47 downto 0); 
+    s_axis_data_tdata       : in std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0); 
     s_axis_data_tlast       : in std_logic; 
     s_axis_data_tready      : out std_logic; 
     s_axis_data_tvalid      : in std_logic; 
     
-    m_axis_data_tdata       : out std_logic_vector(47 downto 0); 
+    m_axis_data_tdata       : out std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0); 
     m_axis_data_tlast       : out std_logic; 
     m_axis_data_tready      : in std_logic; 
-    m_axis_data_tuser       : out std_logic_vector(15 downto 0); 
+    m_axis_data_tuser       : out std_logic_vector(FFT_LENGTH_LOG2-1 downto 0); 
     m_axis_data_tvalid      : out std_logic; 
     
     event_frame_started         : out std_logic; 
@@ -119,18 +120,18 @@ signal lr_select: std_logic := '0';
 signal left_config_tdata : std_logic_vector(15 downto 0) := (others => '0'); 
 signal left_config_tready, left_config_tvalid : std_logic := '0'; 
 
-signal left_fft_in_tdata : std_logic_vector(47 downto 0) := (others => '0'); 
+signal left_fft_in_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
 signal left_fft_in_tlast, left_fft_in_tready, left_fft_in_tvalid : std_logic := '0';
 
-signal left_fft_out_tdata : std_logic_vector(47 downto 0) := (others => '0'); 
+signal left_fft_out_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
 signal left_fft_out_tlast, left_fft_out_tready, left_fft_out_tvalid : std_logic := '0';
-signal left_fft_out_tuser : std_logic_vector(15 downto 0) := (others => '0'); 
+signal left_fft_out_tuser : std_logic_vector(7 downto 0) := (others => '0'); 
 
 signal left_sample_count : unsigned(FFT_LENGTH_LOG2 - 1 downto 0) := (others => '0'); 
 
 signal left_config_sent : std_logic := '0';
-signal left_fft_real, left_fft_imag : signed(23 downto 0) := (others => '0'); 
-signal left_fft_abs_real, left_fft_abs_imag : unsigned(23 downto 0) := (others => '0'); 
+signal left_fft_real, left_fft_imag : signed(AUDIO_DATA_WIDTH-1 downto 0) := (others => '0'); 
+signal left_fft_abs_real, left_fft_abs_imag : unsigned(AUDIO_DATA_WIDTH-1 downto 0) := (others => '0'); 
 signal left_fft_magnitude : unsigned(MAG_WIDTH - 1 downto 0) := (others => '0'); 
 
 signal bram_left_tmp_en : std_logic := '0'; 
@@ -144,18 +145,18 @@ signal bram_left_tmp_addr : std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0) := (o
 signal right_config_tdata : std_logic_vector(15 downto 0) := (others => '0'); 
 signal right_config_tready, right_config_tvalid : std_logic := '0'; 
 
-signal right_fft_in_tdata : std_logic_vector(47 downto 0) := (others => '0'); 
+signal right_fft_in_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
 signal right_fft_in_tlast, right_fft_in_tready, right_fft_in_tvalid : std_logic := '0';
 
-signal right_fft_out_tdata : std_logic_vector(47 downto 0) := (others => '0'); 
+signal right_fft_out_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
 signal right_fft_out_tlast, right_fft_out_tready, right_fft_out_tvalid : std_logic := '0';
-signal right_fft_out_tuser : std_logic_vector(15 downto 0) := (others => '0'); 
+signal right_fft_out_tuser : std_logic_vector(7 downto 0) := (others => '0'); 
 
 signal right_sample_count : unsigned(FFT_LENGTH_LOG2 - 1 downto 0) := (others => '0'); 
 
 signal right_config_sent : std_logic := '0';
-signal right_fft_real, right_fft_imag : signed(23 downto 0) := (others => '0'); 
-signal right_fft_abs_real, right_fft_abs_imag : unsigned(23 downto 0) := (others => '0'); 
+signal right_fft_real, right_fft_imag : signed(AUDIO_DATA_WIDTH-1 downto 0) := (others => '0'); 
+signal right_fft_abs_real, right_fft_abs_imag : unsigned(AUDIO_DATA_WIDTH-1 downto 0) := (others => '0'); 
 signal right_fft_magnitude : unsigned(MAG_WIDTH - 1 downto 0) := (others => '0'); 
 
 signal bram_right_tmp_en : std_logic := '0'; 
@@ -321,8 +322,8 @@ port map(
 left_fft_out_tready <= '1'; 
 right_fft_out_tready <= '1'; 
 
-left_fft_real <= signed(left_fft_out_tdata(23 downto 0));
-left_fft_imag <= signed(left_fft_out_tdata(47 downto 24)); 
+left_fft_real <= signed(left_fft_out_tdata(AUDIO_DATA_WIDTH-1 downto 0));
+left_fft_imag <= signed(left_fft_out_tdata(AUDIO_DATA_WIDTH * 2 - 1 downto AUDIO_DATA_WIDTH)); 
 
 left_fft_abs_real <= unsigned(std_logic_vector(abs(left_fft_real))); 
 left_fft_abs_imag <= unsigned(std_logic_vector(abs(left_fft_imag))); 
@@ -355,12 +356,12 @@ port map(
     dina => std_logic_vector(left_fft_magnitude),
     clkb => bram_left_fft_clk,
     enb => bram_left_fft_en,
-    addrb => bram_left_fft_addr(9 downto 0),
+    addrb => bram_left_fft_addr(FFT_LENGTH_LOG2-1 downto 0),
     doutb => bram_left_fft_dout
 );
 
-right_fft_real <= signed(right_fft_out_tdata(23 downto 0));
-right_fft_imag <= signed(right_fft_out_tdata(47 downto 24)); 
+right_fft_real <= signed(right_fft_out_tdata(AUDIO_DATA_WIDTH - 1 downto 0));
+right_fft_imag <= signed(right_fft_out_tdata(AUDIO_DATA_WIDTH * 2 - 1 downto AUDIO_DATA_WIDTH)); 
 
 right_fft_abs_real <= unsigned(std_logic_vector(abs(right_fft_real))); 
 right_fft_abs_imag <= unsigned(std_logic_vector(abs(right_fft_imag))); 
@@ -393,7 +394,7 @@ port map(
     dina => std_logic_vector(right_fft_magnitude),
     clkb => bram_right_fft_clk,
     enb => bram_right_fft_en,
-    addrb => bram_right_fft_addr(9 downto 0),
+    addrb => bram_right_fft_addr(FFT_LENGTH_LOG2 - 1 downto 0),
     doutb => bram_right_fft_dout
 );
 end Behavioral;
