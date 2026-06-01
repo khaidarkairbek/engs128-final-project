@@ -25,7 +25,8 @@ the UART manual-gain test.
 ## UART controls
 
 - `a`: toggle audio-reactive updates
-- `c`: show color bars
+- `c`: calibrate the quiet baseline for about three seconds, then enter active mode
+- `b`: show color bars
 - `d`: show gradient
 - `h`: request live HDMI input
 - `g`: toggle a live RGB energy and gain trace at about 5 Hz
@@ -35,14 +36,18 @@ the UART manual-gain test.
 - `q`: disable reactive updates and restore unity gains
 - `?`: print the menu
 
-## Gain tuning
+## Calibration and gain tuning
 
 The response calculation is in `audio_reactive.c`: `AudioReactive_Update()`
 averages each FFT band, `EnergyToTargetGain()` converts energy to a Q4.12 target,
-and `SmoothGain()` applies attack and decay smoothing. Tune the log2 response
-window, per-color sensitivity offsets, and gain range in `app_config.h`. Reactive
-mode maps quiet bands down to `0.25x` and active bands up to `4.0x`; disabling
-reactive mode restores neutral `1.0x` gains.
+and `SmoothGain()` applies attack and decay smoothing. Tune the calibration
+window, deadband, minimum response span, and gain range in `app_config.h`.
+
+Press `c` while the input is quiet. The application averages each band's FFT
+energy for about three seconds and stores those values as its baseline. Active
+mode maps a band close to baseline to `1.0x`; as its absolute deviation grows,
+its gain approaches `0.0x`. A deadband prevents normal idle noise from causing
+visible movement. Disabling reactive mode restores neutral `1.0x` gains.
 
 If BSP-generated interrupt macros differ after platform regeneration, override
 `APP_GPIO_VIDEO_IRQ_ID`, `APP_VTC_IN_IRQ_ID`, and `APP_IIC_IRQ_ID` in the build

@@ -18,20 +18,19 @@
 #define APP_MUSICAL_RED_END_HZ      500U
 #define APP_MUSICAL_GREEN_END_HZ    4000U
 
-/*
- * Tune these after inspecting diagnostics with the 's' command or live gain
- * trace. Bass energy is usually stronger in music, so red is attenuated while
- * green and blue are progressively emphasized before gain conversion.
- */
-#define APP_ACTIVITY_LOG2_FLOOR     11
-#define APP_ACTIVITY_LOG2_CEILING   19
-#define APP_RED_LOG2_ADJUST         (-3)
-#define APP_GREEN_LOG2_ADJUST       0
-#define APP_BLUE_LOG2_ADJUST        2
-
 #define APP_GAIN_UNITY_Q412         0x1000U
-#define APP_GAIN_MIN_Q412           0x0400U
+#define APP_GAIN_MIN_Q412           0x0000U
 #define APP_GAIN_MAX_Q412           0x4000U
+
+/*
+ * Calibration lasts about three seconds at the 30 Hz update rate. Active mode
+ * ignores small deviations around the quiet baseline and reaches 0.0x gain
+ * when a band's deviation is as large as its baseline. The minimum span keeps
+ * nearly silent inputs from becoming hypersensitive.
+ */
+#define APP_CALIBRATION_SAMPLE_COUNT       90U
+#define APP_CALIBRATION_DEADBAND_PERCENT   10U
+#define APP_CALIBRATION_MIN_SPAN           1024U
 
 /* Audio updates run at about 30 Hz. Print traced gains at about 5 Hz. */
 #define APP_GAIN_TRACE_DIVIDER      6U
@@ -63,7 +62,7 @@
 #define APP_VTC_IN_IRQ_ID           XPAR_FABRIC_V_TC_IN_IRQ_INTR
 #endif
 #ifndef APP_IIC_IRQ_ID
-#define APP_IIC_IRQ_ID              XPAR_FABRIC_AXI_IIC_0_IIC2INTC_IRPT_INTR
+#define APP_IIC_IRQ_ID              XPAR_FABRIC_IIC_0_VEC_ID
 #endif
 
 #endif

@@ -7,6 +7,7 @@ void AudioReactive_SetEnabled(int enabled);
 void AudioReactive_ToggleEnabled(void);
 void AudioReactive_ToggleBandPolicy(void);
 void AudioReactive_ToggleGainTrace(void);
+void AudioReactive_StartCalibration(void);
 void AudioReactive_PrintDiagnostics(void);
 
 #endif

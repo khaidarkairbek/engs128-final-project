@@ -19,15 +19,15 @@ typedef enum {
 static BandPolicy sPolicy;
 static int sEnabled;
 static int sGainTraceEnabled;
+static int sCalibrating;
+static int sCalibrated;
 static uint64_t sEnergy[3];
+static uint64_t sCalibrationTotal[3];
+static uint64_t sBaseline[3];
 static uint32_t sGain[3];
 static BinRange sRanges[3];
 static uint32_t sTraceUpdateCount;
-static const int32_t sLog2Adjust[3] = {
-    APP_RED_LOG2_ADJUST,
-    APP_GREEN_LOG2_ADJUST,
-    APP_BLUE_LOG2_ADJUST
-};
+static uint32_t sCalibrationSampleCount;
 
 static uint32_t MinU32(uint32_t a, uint32_t b)
 {
@@ -87,42 +87,42 @@ static uint64_t AverageRange(BinRange range)
     return total / (range.end - range.begin);
 }
 
-static uint32_t Log2U64(uint64_t value)
+static uint64_t AbsDiffU64(uint64_t a, uint64_t b)
 {
-    uint32_t result = 0U;
-
-    while (value > 1U) {
-        value >>= 1U;
-        ++result;
-    }
-
-    return result;
+    return (a > b) ? (a - b) : (b - a);
 }
 
-static uint32_t EnergyToTargetGain(uint64_t energy, int32_t log2Adjust)
+static uint32_t EnergyToTargetGain(uint64_t energy, uint64_t baseline)
 {
-    int32_t level = (int32_t)Log2U64(energy) + log2Adjust;
-    int32_t span = APP_ACTIVITY_LOG2_CEILING - APP_ACTIVITY_LOG2_FLOOR;
-    uint32_t boost;
+    uint64_t difference = AbsDiffU64(energy, baseline);
+    uint64_t deadband = (baseline * APP_CALIBRATION_DEADBAND_PERCENT) / 100U;
+    uint64_t span = (baseline > APP_CALIBRATION_MIN_SPAN) ?
+                    baseline : APP_CALIBRATION_MIN_SPAN;
 
-    if (level <= APP_ACTIVITY_LOG2_FLOOR) {
+    if (difference <= deadband) {
+        return APP_GAIN_UNITY_Q412;
+    }
+    difference -= deadband;
+    if (difference >= span) {
         return APP_GAIN_MIN_Q412;
     }
-    if (level >= APP_ACTIVITY_LOG2_CEILING) {
-        return APP_GAIN_MAX_Q412;
-    }
 
-    boost = ((level - APP_ACTIVITY_LOG2_FLOOR) *
-             (APP_GAIN_MAX_Q412 - APP_GAIN_MIN_Q412)) / span;
-    return APP_GAIN_MIN_Q412 + boost;
+    return APP_GAIN_UNITY_Q412 -
+           (uint32_t)((difference * APP_GAIN_UNITY_Q412) / span);
 }
 
 static uint32_t SmoothGain(uint32_t current, uint32_t target)
 {
-    if (target > current) {
-        return current + (target - current + 1U) / 2U;
+    if (target < current) {
+        return current - (current - target + 1U) / 2U;
     }
-    return current - (current - target + 7U) / 8U;
+    return current + (target - current + 7U) / 8U;
+}
+
+static void SetUnityGain(void)
+{
+    sGain[0] = sGain[1] = sGain[2] = APP_GAIN_UNITY_Q412;
+    VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
 }
 
 void AudioReactive_Init(void)
@@ -130,35 +130,58 @@ void AudioReactive_Init(void)
     sPolicy = BAND_POLICY_MUSICAL;
     sEnabled = 1;
     sGainTraceEnabled = 0;
+    sCalibrating = 0;
+    sCalibrated = 0;
     sTraceUpdateCount = 0U;
     sEnergy[0] = sEnergy[1] = sEnergy[2] = 0U;
-    sGain[0] = sGain[1] = sGain[2] = APP_GAIN_UNITY_Q412;
+    sBaseline[0] = sBaseline[1] = sBaseline[2] = 0U;
     ConfigureRanges();
-    VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
+    SetUnityGain();
+    xil_printf("Reactive mode waiting for calibration; press 'c' in silence\r\n");
 }
 
 void AudioReactive_Update(void)
 {
     uint32_t i;
 
-    if (!sEnabled) {
-        return;
-    }
-
     for (i = 0U; i < 3U; ++i) {
         sEnergy[i] = AverageRange(sRanges[i]);
-        sGain[i] = SmoothGain(sGain[i],
-                              EnergyToTargetGain(sEnergy[i], sLog2Adjust[i]));
     }
 
-    VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
+    if (sEnabled && sCalibrating) {
+        for (i = 0U; i < 3U; ++i) {
+            sCalibrationTotal[i] += sEnergy[i];
+        }
+        ++sCalibrationSampleCount;
+        if (sCalibrationSampleCount >= APP_CALIBRATION_SAMPLE_COUNT) {
+            for (i = 0U; i < 3U; ++i) {
+                sBaseline[i] = sCalibrationTotal[i] /
+                               APP_CALIBRATION_SAMPLE_COUNT;
+            }
+            sCalibrating = 0;
+            sCalibrated = 1;
+            xil_printf("Calibration complete: baseline=%lu/%lu/%lu\r\n",
+                       (unsigned long)sBaseline[0],
+                       (unsigned long)sBaseline[1],
+                       (unsigned long)sBaseline[2]);
+        }
+    } else if (sEnabled && sCalibrated) {
+        for (i = 0U; i < 3U; ++i) {
+            sGain[i] = SmoothGain(sGain[i],
+                                  EnergyToTargetGain(sEnergy[i], sBaseline[i]));
+        }
+        VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
+    }
+
     if (sGainTraceEnabled &&
         ++sTraceUpdateCount >= APP_GAIN_TRACE_DIVIDER) {
         sTraceUpdateCount = 0U;
-        xil_printf("gain trace: energy=%lu/%lu/%lu gain=%04x/%04x/%04x\r\n",
+        xil_printf("gain trace: energy=%lu/%lu/%lu base=%lu/%lu/%lu gain=%04x/%04x/%04x\r\n",
                    (unsigned long)sEnergy[0], (unsigned long)sEnergy[1],
-                   (unsigned long)sEnergy[2], (unsigned int)sGain[0],
-                   (unsigned int)sGain[1], (unsigned int)sGain[2]);
+                   (unsigned long)sEnergy[2], (unsigned long)sBaseline[0],
+                   (unsigned long)sBaseline[1], (unsigned long)sBaseline[2],
+                   (unsigned int)sGain[0], (unsigned int)sGain[1],
+                   (unsigned int)sGain[2]);
     }
 }
 
@@ -166,8 +189,7 @@ void AudioReactive_SetEnabled(int enabled)
 {
     sEnabled = enabled != 0;
     if (!sEnabled) {
-        sGain[0] = sGain[1] = sGain[2] = APP_GAIN_UNITY_Q412;
-        VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
+        SetUnityGain();
     }
     xil_printf("Audio reactive: %s\r\n", sEnabled ? "on" : "off");
 }
@@ -182,8 +204,12 @@ void AudioReactive_ToggleBandPolicy(void)
     sPolicy = (sPolicy == BAND_POLICY_MUSICAL) ?
               BAND_POLICY_EQUAL_THIRDS : BAND_POLICY_MUSICAL;
     ConfigureRanges();
+    sCalibrating = 0;
+    sCalibrated = 0;
+    SetUnityGain();
     xil_printf("Band policy: %s\r\n",
                (sPolicy == BAND_POLICY_MUSICAL) ? "musical" : "equal thirds");
+    xil_printf("Band ranges changed; press 'c' in silence to recalibrate\r\n");
 }
 
 void AudioReactive_ToggleGainTrace(void)
@@ -193,24 +219,45 @@ void AudioReactive_ToggleGainTrace(void)
     xil_printf("Gain trace: %s\r\n", sGainTraceEnabled ? "on" : "off");
 }
 
+void AudioReactive_StartCalibration(void)
+{
+    uint32_t i;
+
+    sEnabled = 1;
+    sCalibrating = 1;
+    sCalibrated = 0;
+    sCalibrationSampleCount = 0U;
+    for (i = 0U; i < 3U; ++i) {
+        sCalibrationTotal[i] = 0U;
+        sBaseline[i] = 0U;
+    }
+    SetUnityGain();
+    xil_printf("Calibration started: keep audio quiet for about %d seconds\r\n",
+               (int)((APP_CALIBRATION_SAMPLE_COUNT * APP_UPDATE_INTERVAL_US +
+                      999999U) / 1000000U));
+}
+
 void AudioReactive_PrintDiagnostics(void)
 {
-    xil_printf("FFT: %d points, %d Hz sample rate, policy=%s, reactive=%s, trace=%s\r\n",
+    xil_printf("FFT: %d points, %d Hz sample rate, policy=%s, reactive=%s, trace=%s, calibration=%s\r\n",
                (int)APP_FFT_LENGTH, (int)APP_SAMPLE_RATE_HZ,
                (sPolicy == BAND_POLICY_MUSICAL) ? "musical" : "equal thirds",
-               sEnabled ? "on" : "off", sGainTraceEnabled ? "on" : "off");
-    xil_printf("Response: log2 window=[%d,%d], adjust=%d/%d/%d, gain_range=0x%04x..0x%04x\r\n",
-               APP_ACTIVITY_LOG2_FLOOR, APP_ACTIVITY_LOG2_CEILING,
-               APP_RED_LOG2_ADJUST, APP_GREEN_LOG2_ADJUST,
-               APP_BLUE_LOG2_ADJUST, (unsigned int)APP_GAIN_MIN_Q412,
-               (unsigned int)APP_GAIN_MAX_Q412);
-    xil_printf("R bins [%d,%d) energy=%lu gain=0x%04x\r\n",
+               sEnabled ? "on" : "off", sGainTraceEnabled ? "on" : "off",
+               sCalibrating ? "running" : (sCalibrated ? "ready" : "required"));
+    xil_printf("Calibration: samples=%d/%d deadband=%d%% min_span=%lu\r\n",
+               (int)sCalibrationSampleCount, (int)APP_CALIBRATION_SAMPLE_COUNT,
+               (int)APP_CALIBRATION_DEADBAND_PERCENT,
+               (unsigned long)APP_CALIBRATION_MIN_SPAN);
+    xil_printf("R bins [%d,%d) energy=%lu base=%lu gain=0x%04x\r\n",
                (int)sRanges[0].begin, (int)sRanges[0].end,
-               (unsigned long)sEnergy[0], (unsigned int)sGain[0]);
-    xil_printf("G bins [%d,%d) energy=%lu gain=0x%04x\r\n",
+               (unsigned long)sEnergy[0], (unsigned long)sBaseline[0],
+               (unsigned int)sGain[0]);
+    xil_printf("G bins [%d,%d) energy=%lu base=%lu gain=0x%04x\r\n",
                (int)sRanges[1].begin, (int)sRanges[1].end,
-               (unsigned long)sEnergy[1], (unsigned int)sGain[1]);
-    xil_printf("B bins [%d,%d) energy=%lu gain=0x%04x\r\n",
+               (unsigned long)sEnergy[1], (unsigned long)sBaseline[1],
+               (unsigned int)sGain[1]);
+    xil_printf("B bins [%d,%d) energy=%lu base=%lu gain=0x%04x\r\n",
                (int)sRanges[2].begin, (int)sRanges[2].end,
-               (unsigned long)sEnergy[2], (unsigned int)sGain[2]);
+               (unsigned long)sEnergy[2], (unsigned long)sBaseline[2],
+               (unsigned int)sGain[2]);
 }

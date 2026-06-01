@@ -14,7 +14,8 @@ static XIic sIic;
 static void PrintMenu(void)
 {
     xil_printf("\r\nENGS 128 audio-reactive video\r\n");
-    xil_printf("  a reactive toggle | c color bars | d gradient | h live HDMI\r\n");
+    xil_printf("  a reactive toggle | c calibrate silence | b color bars\r\n");
+    xil_printf("  d gradient | h live HDMI\r\n");
     xil_printf("  g live gain trace | m manual gain test | p band policy\r\n");
     xil_printf("  s status | q unity gain | ? menu\r\n");
 }
@@ -26,6 +27,9 @@ static void HandleKey(char key)
         AudioReactive_ToggleEnabled();
         break;
     case 'c':
+        AudioReactive_StartCalibration();
+        break;
+    case 'b':
         VideoApp_ShowColorBars();
         break;
     case 'd':
