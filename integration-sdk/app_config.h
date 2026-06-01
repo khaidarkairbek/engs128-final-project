@@ -19,18 +19,20 @@
 #define APP_MUSICAL_GREEN_END_HZ    4000U
 
 #define APP_GAIN_UNITY_Q412         0x1000U
-#define APP_GAIN_MIN_Q412           0x0000U
+#define APP_GAIN_MIN_Q412           0x0200U
 #define APP_GAIN_MAX_Q412           0x4000U
 
 /*
  * Calibration lasts about three seconds at the 30 Hz update rate. Active mode
- * ignores small deviations around the quiet baseline and reaches 0.0x gain
- * when a band's deviation is as large as its baseline. The minimum span keeps
- * nearly silent inputs from becoming hypersensitive.
+ * ignores small deviations around the quiet baseline. Above the deadband, the
+ * absolute difference is normalized by the baseline and mapped logarithmically.
+ * A ratio of 1 means the deviation equals the baseline; a ratio of 64 reaches
+ * the minimum gain. The minimum span keeps nearly silent inputs stable.
  */
 #define APP_CALIBRATION_SAMPLE_COUNT       90U
 #define APP_CALIBRATION_DEADBAND_PERCENT   10U
 #define APP_CALIBRATION_MIN_SPAN           1024U
+#define APP_RESPONSE_MAX_RATIO             64U
 
 /* Audio updates run at about 30 Hz. Print traced gains at about 5 Hz. */
 #define APP_GAIN_TRACE_DIVIDER      6U

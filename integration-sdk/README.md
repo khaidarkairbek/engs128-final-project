@@ -46,8 +46,9 @@ window, deadband, minimum response span, and gain range in `app_config.h`.
 Press `c` while the input is quiet. The application averages each band's FFT
 energy for about three seconds and stores those values as its baseline. Active
 mode maps a band close to baseline to `1.0x`; as its absolute deviation grows,
-its gain approaches `0.0x`. A deadband prevents normal idle noise from causing
-visible movement. Disabling reactive mode restores neutral `1.0x` gains.
+its gain approaches `0.125x` using a log-scaled deviation ratio. A deadband
+prevents normal idle noise from causing visible movement. Disabling reactive
+mode restores neutral `1.0x` gains.
 
 If BSP-generated interrupt macros differ after platform regeneration, override
 `APP_GPIO_VIDEO_IRQ_ID`, `APP_VTC_IN_IRQ_ID`, and `APP_IIC_IRQ_ID` in the build

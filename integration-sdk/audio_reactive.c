@@ -92,23 +92,50 @@ static uint64_t AbsDiffU64(uint64_t a, uint64_t b)
     return (a > b) ? (a - b) : (b - a);
 }
 
+static uint32_t Log2Q8(uint64_t valueQ8)
+{
+    uint32_t whole = 0U;
+    uint64_t base = 256U;
+
+    while (valueQ8 >= (base << 1U)) {
+        base <<= 1U;
+        ++whole;
+    }
+
+    /*
+     * Linear interpolation within each power-of-two interval is sufficient
+     * for a visual control signal and avoids floating-point math on the ARM.
+     */
+    return (whole << 8U) + (uint32_t)(((valueQ8 - base) << 8U) / base);
+}
+
 static uint32_t EnergyToTargetGain(uint64_t energy, uint64_t baseline)
 {
     uint64_t difference = AbsDiffU64(energy, baseline);
     uint64_t deadband = (baseline * APP_CALIBRATION_DEADBAND_PERCENT) / 100U;
     uint64_t span = (baseline > APP_CALIBRATION_MIN_SPAN) ?
                     baseline : APP_CALIBRATION_MIN_SPAN;
+    uint64_t ratioQ8;
+    uint32_t responseLevelQ8;
+    uint32_t maxResponseLevelQ8 = Log2Q8(APP_RESPONSE_MAX_RATIO << 8U);
 
     if (difference <= deadband) {
         return APP_GAIN_UNITY_Q412;
     }
     difference -= deadband;
-    if (difference >= span) {
+    ratioQ8 = (difference << 8U) / span;
+    if (ratioQ8 >= (APP_RESPONSE_MAX_RATIO << 8U)) {
         return APP_GAIN_MIN_Q412;
     }
 
+    /*
+     * Add one so sub-baseline differences remain near unity and the response
+     * grows gradually as the deviation crosses powers of two.
+     */
+    responseLevelQ8 = Log2Q8(ratioQ8 + 256U);
     return APP_GAIN_UNITY_Q412 -
-           (uint32_t)((difference * APP_GAIN_UNITY_Q412) / span);
+           (responseLevelQ8 * (APP_GAIN_UNITY_Q412 - APP_GAIN_MIN_Q412)) /
+           maxResponseLevelQ8;
 }
 
 static uint32_t SmoothGain(uint32_t current, uint32_t target)
@@ -244,10 +271,11 @@ void AudioReactive_PrintDiagnostics(void)
                (sPolicy == BAND_POLICY_MUSICAL) ? "musical" : "equal thirds",
                sEnabled ? "on" : "off", sGainTraceEnabled ? "on" : "off",
                sCalibrating ? "running" : (sCalibrated ? "ready" : "required"));
-    xil_printf("Calibration: samples=%d/%d deadband=%d%% min_span=%lu\r\n",
+    xil_printf("Calibration: samples=%d/%d deadband=%d%% min_span=%lu max_ratio=%d\r\n",
                (int)sCalibrationSampleCount, (int)APP_CALIBRATION_SAMPLE_COUNT,
                (int)APP_CALIBRATION_DEADBAND_PERCENT,
-               (unsigned long)APP_CALIBRATION_MIN_SPAN);
+               (unsigned long)APP_CALIBRATION_MIN_SPAN,
+               (int)APP_RESPONSE_MAX_RATIO);
     xil_printf("R bins [%d,%d) energy=%lu base=%lu gain=0x%04x\r\n",
                (int)sRanges[0].begin, (int)sRanges[0].end,
                (unsigned long)sEnergy[0], (unsigned long)sBaseline[0],
