@@ -18,9 +18,16 @@ typedef enum {
 
 static BandPolicy sPolicy;
 static int sEnabled;
+static int sGainTraceEnabled;
 static uint64_t sEnergy[3];
 static uint32_t sGain[3];
 static BinRange sRanges[3];
+static uint32_t sTraceUpdateCount;
+static const int32_t sLog2Adjust[3] = {
+    APP_RED_LOG2_ADJUST,
+    APP_GREEN_LOG2_ADJUST,
+    APP_BLUE_LOG2_ADJUST
+};
 
 static uint32_t MinU32(uint32_t a, uint32_t b)
 {
@@ -92,22 +99,22 @@ static uint32_t Log2U64(uint64_t value)
     return result;
 }
 
-static uint32_t EnergyToTargetGain(uint64_t energy)
+static uint32_t EnergyToTargetGain(uint64_t energy, int32_t log2Adjust)
 {
-    uint32_t level = Log2U64(energy);
-    uint32_t span = APP_ACTIVITY_LOG2_CEILING - APP_ACTIVITY_LOG2_FLOOR;
+    int32_t level = (int32_t)Log2U64(energy) + log2Adjust;
+    int32_t span = APP_ACTIVITY_LOG2_CEILING - APP_ACTIVITY_LOG2_FLOOR;
     uint32_t boost;
 
     if (level <= APP_ACTIVITY_LOG2_FLOOR) {
-        return APP_GAIN_UNITY_Q412;
+        return APP_GAIN_MIN_Q412;
     }
     if (level >= APP_ACTIVITY_LOG2_CEILING) {
         return APP_GAIN_MAX_Q412;
     }
 
     boost = ((level - APP_ACTIVITY_LOG2_FLOOR) *
-             (APP_GAIN_MAX_Q412 - APP_GAIN_UNITY_Q412)) / span;
-    return APP_GAIN_UNITY_Q412 + boost;
+             (APP_GAIN_MAX_Q412 - APP_GAIN_MIN_Q412)) / span;
+    return APP_GAIN_MIN_Q412 + boost;
 }
 
 static uint32_t SmoothGain(uint32_t current, uint32_t target)
@@ -122,6 +129,8 @@ void AudioReactive_Init(void)
 {
     sPolicy = BAND_POLICY_MUSICAL;
     sEnabled = 1;
+    sGainTraceEnabled = 0;
+    sTraceUpdateCount = 0U;
     sEnergy[0] = sEnergy[1] = sEnergy[2] = 0U;
     sGain[0] = sGain[1] = sGain[2] = APP_GAIN_UNITY_Q412;
     ConfigureRanges();
@@ -138,10 +147,19 @@ void AudioReactive_Update(void)
 
     for (i = 0U; i < 3U; ++i) {
         sEnergy[i] = AverageRange(sRanges[i]);
-        sGain[i] = SmoothGain(sGain[i], EnergyToTargetGain(sEnergy[i]));
+        sGain[i] = SmoothGain(sGain[i],
+                              EnergyToTargetGain(sEnergy[i], sLog2Adjust[i]));
     }
 
     VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
+    if (sGainTraceEnabled &&
+        ++sTraceUpdateCount >= APP_GAIN_TRACE_DIVIDER) {
+        sTraceUpdateCount = 0U;
+        xil_printf("gain trace: energy=%lu/%lu/%lu gain=%04x/%04x/%04x\r\n",
+                   (unsigned long)sEnergy[0], (unsigned long)sEnergy[1],
+                   (unsigned long)sEnergy[2], (unsigned int)sGain[0],
+                   (unsigned int)sGain[1], (unsigned int)sGain[2]);
+    }
 }
 
 void AudioReactive_SetEnabled(int enabled)
@@ -168,12 +186,24 @@ void AudioReactive_ToggleBandPolicy(void)
                (sPolicy == BAND_POLICY_MUSICAL) ? "musical" : "equal thirds");
 }
 
+void AudioReactive_ToggleGainTrace(void)
+{
+    sGainTraceEnabled = !sGainTraceEnabled;
+    sTraceUpdateCount = 0U;
+    xil_printf("Gain trace: %s\r\n", sGainTraceEnabled ? "on" : "off");
+}
+
 void AudioReactive_PrintDiagnostics(void)
 {
-    xil_printf("FFT: %d points, %d Hz sample rate, policy=%s, reactive=%s\r\n",
+    xil_printf("FFT: %d points, %d Hz sample rate, policy=%s, reactive=%s, trace=%s\r\n",
                (int)APP_FFT_LENGTH, (int)APP_SAMPLE_RATE_HZ,
                (sPolicy == BAND_POLICY_MUSICAL) ? "musical" : "equal thirds",
-               sEnabled ? "on" : "off");
+               sEnabled ? "on" : "off", sGainTraceEnabled ? "on" : "off");
+    xil_printf("Response: log2 window=[%d,%d], adjust=%d/%d/%d, gain_range=0x%04x..0x%04x\r\n",
+               APP_ACTIVITY_LOG2_FLOOR, APP_ACTIVITY_LOG2_CEILING,
+               APP_RED_LOG2_ADJUST, APP_GREEN_LOG2_ADJUST,
+               APP_BLUE_LOG2_ADJUST, (unsigned int)APP_GAIN_MIN_Q412,
+               (unsigned int)APP_GAIN_MAX_Q412);
     xil_printf("R bins [%d,%d) energy=%lu gain=0x%04x\r\n",
                (int)sRanges[0].begin, (int)sRanges[0].end,
                (unsigned long)sEnergy[0], (unsigned int)sGain[0]);

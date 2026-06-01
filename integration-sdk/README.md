@@ -28,11 +28,21 @@ the UART manual-gain test.
 - `c`: show color bars
 - `d`: show gradient
 - `h`: request live HDMI input
+- `g`: toggle a live RGB energy and gain trace at about 5 Hz
 - `m`: disable reactive updates and cycle manual RGB gain presets
 - `p`: switch between musical bands and equal thirds
 - `s`: print FFT, band, gain, and video diagnostics
 - `q`: disable reactive updates and restore unity gains
 - `?`: print the menu
+
+## Gain tuning
+
+The response calculation is in `audio_reactive.c`: `AudioReactive_Update()`
+averages each FFT band, `EnergyToTargetGain()` converts energy to a Q4.12 target,
+and `SmoothGain()` applies attack and decay smoothing. Tune the log2 response
+window, per-color sensitivity offsets, and gain range in `app_config.h`. Reactive
+mode maps quiet bands down to `0.25x` and active bands up to `4.0x`; disabling
+reactive mode restores neutral `1.0x` gains.
 
 If BSP-generated interrupt macros differ after platform regeneration, override
 `APP_GPIO_VIDEO_IRQ_ID`, `APP_VTC_IN_IRQ_ID`, and `APP_IIC_IRQ_ID` in the build

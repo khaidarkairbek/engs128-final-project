@@ -18,12 +18,23 @@
 #define APP_MUSICAL_RED_END_HZ      500U
 #define APP_MUSICAL_GREEN_END_HZ    4000U
 
-/* Tune these after inspecting diagnostics with the 's' command. */
-#define APP_ACTIVITY_LOG2_FLOOR     12U
-#define APP_ACTIVITY_LOG2_CEILING   23U
+/*
+ * Tune these after inspecting diagnostics with the 's' command or live gain
+ * trace. Bass energy is usually stronger in music, so red is attenuated while
+ * green and blue are progressively emphasized before gain conversion.
+ */
+#define APP_ACTIVITY_LOG2_FLOOR     11
+#define APP_ACTIVITY_LOG2_CEILING   19
+#define APP_RED_LOG2_ADJUST         (-3)
+#define APP_GREEN_LOG2_ADJUST       0
+#define APP_BLUE_LOG2_ADJUST        2
 
 #define APP_GAIN_UNITY_Q412         0x1000U
-#define APP_GAIN_MAX_Q412           0x2000U
+#define APP_GAIN_MIN_Q412           0x0400U
+#define APP_GAIN_MAX_Q412           0x4000U
+
+/* Audio updates run at about 30 Hz. Print traced gains at about 5 Hz. */
+#define APP_GAIN_TRACE_DIVIDER      6U
 
 #define APP_FRAME_WIDTH_MAX         1920U
 #define APP_FRAME_HEIGHT_MAX        1080U

@@ -15,7 +15,8 @@ static void PrintMenu(void)
 {
     xil_printf("\r\nENGS 128 audio-reactive video\r\n");
     xil_printf("  a reactive toggle | c color bars | d gradient | h live HDMI\r\n");
-    xil_printf("  m manual gain test | p band policy | s status | q unity gain\r\n");
+    xil_printf("  g live gain trace | m manual gain test | p band policy\r\n");
+    xil_printf("  s status | q unity gain | ? menu\r\n");
 }
 
 static void HandleKey(char key)
@@ -32,6 +33,9 @@ static void HandleKey(char key)
         break;
     case 'h':
         (void)VideoApp_SelectLiveHdmi();
+        break;
+    case 'g':
+        AudioReactive_ToggleGainTrace();
         break;
     case 'm':
         AudioReactive_SetEnabled(0);
