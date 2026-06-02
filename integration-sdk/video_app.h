@@ -7,11 +7,10 @@
 int VideoApp_Init(void);
 void VideoApp_EnableInterrupts(XIic *iic);
 void VideoApp_Service(void);
-void VideoApp_SetGain(u32 r, u32 g, u32 b);
 void VideoApp_ShowColorBars(void);
 void VideoApp_ShowGradient(void);
 int VideoApp_SelectLiveHdmi(void);
-void VideoApp_CycleManualGain(void);
+int VideoApp_CycleSource(void);
 void VideoApp_PrintDiagnostics(void);
 
 #endif

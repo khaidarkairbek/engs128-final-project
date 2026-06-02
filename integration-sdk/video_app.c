@@ -7,7 +7,6 @@
 #include "xaxivdma.h"
 #include "xgpio.h"
 #include "xil_cache.h"
-#include "xil_io.h"
 #include "xil_printf.h"
 #include "xparameters.h"
 
@@ -23,8 +22,6 @@ static DisplayCtrl sDisplay;
 static VideoCapture sCapture;
 static VideoSource sSource;
 static volatile int sCaptureEvent;
-static u32 sGain[3];
-static unsigned int sManualPreset;
 
 static u8 sFrameBuf[DISPLAY_NUM_FRAMES][APP_FRAME_BYTES_MAX]
     __attribute__((aligned(0x20)));
@@ -164,9 +161,6 @@ int VideoApp_Init(void)
     if (status != XST_SUCCESS) return status;
 
     VideoSetCallback(&sCapture, CaptureCallback, NULL);
-    sGain[0] = sGain[1] = sGain[2] = APP_GAIN_UNITY_Q412;
-    sManualPreset = 0U;
-    VideoApp_SetGain(sGain[0], sGain[1], sGain[2]);
     VideoApp_ShowColorBars();
     return XST_SUCCESS;
 }
@@ -195,16 +189,6 @@ void VideoApp_Service(void)
         return;
     }
     (void)ActivateLiveIfReady();
-}
-
-void VideoApp_SetGain(u32 r, u32 g, u32 b)
-{
-    sGain[0] = r;
-    sGain[1] = g;
-    sGain[2] = b;
-    Xil_Out32(APP_FILTER_BASE, r);
-    Xil_Out32(APP_FILTER_BASE + 4U, g);
-    Xil_Out32(APP_FILTER_BASE + 8U, b);
 }
 
 void VideoApp_ShowColorBars(void)
@@ -250,29 +234,23 @@ int VideoApp_SelectLiveHdmi(void)
     return ActivateLiveIfReady();
 }
 
-void VideoApp_CycleManualGain(void)
+int VideoApp_CycleSource(void)
 {
-    static const u32 presets[][3] = {
-        {APP_GAIN_UNITY_Q412, APP_GAIN_UNITY_Q412, APP_GAIN_UNITY_Q412},
-        {APP_GAIN_MAX_Q412, APP_GAIN_UNITY_Q412, APP_GAIN_UNITY_Q412},
-        {APP_GAIN_UNITY_Q412, APP_GAIN_MAX_Q412, APP_GAIN_UNITY_Q412},
-        {APP_GAIN_UNITY_Q412, APP_GAIN_UNITY_Q412, APP_GAIN_MAX_Q412}
-    };
+    if (sSource == SOURCE_COLOR_BARS) {
+        VideoApp_ShowGradient();
+        return XST_SUCCESS;
+    }
+    if (sSource == SOURCE_GRADIENT) {
+        return VideoApp_SelectLiveHdmi();
+    }
 
-    sManualPreset = (sManualPreset + 1U) %
-                    (sizeof(presets) / sizeof(presets[0]));
-    VideoApp_SetGain(presets[sManualPreset][0], presets[sManualPreset][1],
-                     presets[sManualPreset][2]);
-    xil_printf("Manual gain preset %d: R=0x%04x G=0x%04x B=0x%04x\r\n",
-               (int)sManualPreset, (unsigned int)sGain[0],
-               (unsigned int)sGain[1], (unsigned int)sGain[2]);
+    VideoApp_ShowColorBars();
+    return XST_SUCCESS;
 }
 
 void VideoApp_PrintDiagnostics(void)
 {
     static const char *const sourceNames[] = {"color bars", "gradient", "live HDMI"};
-    xil_printf("Video: source=%s capture_state=%d display=%s gains=%04x/%04x/%04x\r\n",
-               sourceNames[sSource], (int)sCapture.state, sDisplay.vMode.label,
-               (unsigned int)sGain[0], (unsigned int)sGain[1],
-               (unsigned int)sGain[2]);
+    xil_printf("Video: source=%s capture_state=%d display=%s\r\n",
+               sourceNames[sSource], (int)sCapture.state, sDisplay.vMode.label);
 }
