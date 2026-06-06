@@ -1,22 +1,9 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 05/29/2026 01:51:17 PM
--- Design Name: 
--- Module Name: fft_wrapper - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
-----------------------------------------------------------------------------------
+----------------------------------------------------------------------------
+--  Final Project: Audio Controlled Video Processing
+----------------------------------------------------------------------------
+--  ENGS 128 Spring 2026
+--  Author: Khaidar Kairbek & Brandon Carido
+----------------------------------------------------------------------------
 
 
 library IEEE;
@@ -27,10 +14,9 @@ entity fft_wrapper is
 generic (
     C_AXI_STREAM_DATA_WIDTH : integer := 32;
     AUDIO_DATA_WIDTH : integer := 24; 
-    FFT_LENGTH : integer := 256; 
-    FFT_LENGTH_LOG2 : integer := 8;
-    MAG_WIDTH : integer := 32; 
-    BRAM_READ_ADDR_WIDTH : integer := 13
+    FFT_LENGTH : integer := 64; 
+    FFT_LENGTH_LOG2 : integer := 6;
+    MAG_WIDTH : integer := 32
 );
 port(
     aclk                : in std_logic; 
@@ -50,19 +36,13 @@ port(
     
     bram_left_fft_clk           : in std_logic; 
     bram_left_fft_en            : in std_logic; 
-    bram_left_fft_addr          : in std_logic_vector(BRAM_READ_ADDR_WIDTH - 1 downto 0); 
-    bram_left_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0); 
-    bram_left_fft_din           : in std_logic_vector(MAG_WIDTH - 1 downto 0); -- ignored
-    bram_left_fft_rst           : in std_logic; -- ignored
-    bram_left_fft_we            : in std_logic_vector(MAG_WIDTH/8 - 1 downto 0); --ignored
+    bram_left_fft_addr          : in std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0); 
+    bram_left_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0);
     
     bram_right_fft_clk           : in std_logic; 
     bram_right_fft_en            : in std_logic; 
-    bram_right_fft_addr          : in std_logic_vector(BRAM_READ_ADDR_WIDTH - 1 downto 0); 
-    bram_right_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0);
-    bram_right_fft_din           : in std_logic_vector(MAG_WIDTH - 1 downto 0); -- ignored
-    bram_right_fft_rst           : in std_logic; -- ignored
-    bram_right_fft_we            : in std_logic_vector(MAG_WIDTH/8 - 1 downto 0) --ignored
+    bram_right_fft_addr          : in std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0); 
+    bram_right_fft_dout          : out std_logic_vector(MAG_WIDTH - 1 downto 0)
 );
 end fft_wrapper;
 
@@ -87,7 +67,7 @@ port(
     aclk : in std_logic; 
     aresetn : in std_logic; 
     
-    s_axis_config_tdata     : in std_logic_vector(15 downto 0); 
+    s_axis_config_tdata     : in std_logic_vector(7 downto 0); 
     s_axis_config_tready    : out std_logic; 
     s_axis_config_tvalid    : in std_logic; 
     
@@ -99,7 +79,7 @@ port(
     m_axis_data_tdata       : out std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0); 
     m_axis_data_tlast       : out std_logic; 
     m_axis_data_tready      : in std_logic; 
-    m_axis_data_tuser       : out std_logic_vector(FFT_LENGTH_LOG2-1 downto 0); 
+    m_axis_data_tuser       : out std_logic_vector(7 downto 0); 
     m_axis_data_tvalid      : out std_logic; 
     
     event_frame_started         : out std_logic; 
@@ -117,7 +97,7 @@ signal lr_select: std_logic := '0';
 -- LEFT FFT SIGNALS
 --------------------------------------------------
 
-signal left_config_tdata : std_logic_vector(15 downto 0) := (others => '0'); 
+signal left_config_tdata : std_logic_vector(7 downto 0) := (others => '0'); 
 signal left_config_tready, left_config_tvalid : std_logic := '0'; 
 
 signal left_fft_in_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
@@ -142,7 +122,7 @@ signal bram_left_tmp_addr : std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0) := (o
 -- RIGHT FFT SIGNALS
 --------------------------------------------------
 
-signal right_config_tdata : std_logic_vector(15 downto 0) := (others => '0'); 
+signal right_config_tdata : std_logic_vector(7 downto 0) := (others => '0'); 
 signal right_config_tready, right_config_tvalid : std_logic := '0'; 
 
 signal right_fft_in_tdata : std_logic_vector(AUDIO_DATA_WIDTH * 2 - 1 downto 0) := (others => '0'); 
@@ -224,13 +204,13 @@ end process;
 -----------------------------------------------------
 -- FFT CONFIG
 -----------------------------------------------------
-left_config_tdata <= x"0001"; -- TODO: change the value 
-right_config_tdata <= x"0001";
+left_config_tdata <= x"01"; -- TODO: change the value 
+right_config_tdata <= x"01";
 
 left_config_proc: process (aclk) 
 begin 
     if rising_edge(aclk) then 
-        if aresetn = '1' then 
+        if aresetn = '0' then 
             left_config_sent <= '0'; 
             left_config_tvalid <= '0';
         elsif left_config_sent = '0' then 
@@ -248,7 +228,7 @@ end process;
 right_config_proc: process (aclk) 
 begin 
     if rising_edge(aclk) then 
-        if aresetn = '1' then 
+        if aresetn = '0' then 
             right_config_sent <= '0'; 
             right_config_tvalid <= '0';
         elsif right_config_sent = '0' then 
@@ -356,7 +336,7 @@ port map(
     dina => std_logic_vector(left_fft_magnitude),
     clkb => bram_left_fft_clk,
     enb => bram_left_fft_en,
-    addrb => bram_left_fft_addr(FFT_LENGTH_LOG2-1 downto 0),
+    addrb => bram_left_fft_addr,
     doutb => bram_left_fft_dout
 );
 
@@ -376,8 +356,8 @@ begin
             bram_right_tmp_we <= (others => '0'); 
             bram_right_tmp_addr <= (others => '0'); 
         else 
-            bram_right_tmp_en <= left_fft_out_tvalid; 
-            bram_right_tmp_we <= (others => left_fft_out_tvalid); 
+            bram_right_tmp_en <= right_fft_out_tvalid; 
+            bram_right_tmp_we <= (others => right_fft_out_tvalid); 
             if right_fft_out_tvalid = '1' then 
                 bram_right_tmp_addr <= right_fft_out_tuser(FFT_LENGTH_LOG2 - 1 downto 0); 
             end if;
@@ -394,7 +374,7 @@ port map(
     dina => std_logic_vector(right_fft_magnitude),
     clkb => bram_right_fft_clk,
     enb => bram_right_fft_en,
-    addrb => bram_right_fft_addr(FFT_LENGTH_LOG2 - 1 downto 0),
+    addrb => bram_right_fft_addr,
     doutb => bram_right_fft_dout
 );
 end Behavioral;

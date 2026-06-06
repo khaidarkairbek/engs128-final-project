@@ -3,7 +3,7 @@
   <spirit:vendor>dartmouth.edu</spirit:vendor>
   <spirit:library>user</spirit:library>
   <spirit:name>fft_wrapper</spirit:name>
-  <spirit:version>1.0</spirit:version>
+  <spirit:version>1.3</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
       <spirit:name>m_axis</spirit:name>
@@ -119,41 +119,9 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY" spirit:choiceRef="choice_list_74b5137e">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
-    </spirit:busInterface>
-    <spirit:busInterface>
-      <spirit:name>bram_left_fft_rst</spirit:name>
-      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset" spirit:version="1.0"/>
-      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset_rtl" spirit:version="1.0"/>
-      <spirit:slave/>
-      <spirit:portMaps>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>RST</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_left_fft_rst</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-      </spirit:portMaps>
-    </spirit:busInterface>
-    <spirit:busInterface>
-      <spirit:name>bram_right_fft_rst</spirit:name>
-      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset" spirit:version="1.0"/>
-      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset_rtl" spirit:version="1.0"/>
-      <spirit:slave/>
-      <spirit:portMaps>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>RST</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_right_fft_rst</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-      </spirit:portMaps>
     </spirit:busInterface>
     <spirit:busInterface>
       <spirit:name>aclk</spirit:name>
@@ -234,26 +202,10 @@
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>RST</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_left_fft_rst</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
             <spirit:name>CLK</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>bram_left_fft_clk</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>DIN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_left_fft_din</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -270,14 +222,6 @@
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>bram_left_fft_dout</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>WE</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_left_fft_we</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -317,26 +261,10 @@
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>RST</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_right_fft_rst</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
             <spirit:name>CLK</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>bram_right_fft_clk</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>DIN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_right_fft_din</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -353,14 +281,6 @@
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>bram_right_fft_dout</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>WE</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>bram_right_fft_we</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -412,7 +332,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>8f5bb355</spirit:value>
+            <spirit:value>0adb7897</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -434,7 +354,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>8f5bb355</spirit:value>
+            <spirit:value>0adb7897</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -463,7 +383,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>6000ad08</spirit:value>
+            <spirit:value>06b0e348</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -684,7 +604,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.BRAM_READ_ADDR_WIDTH&apos;)) - 1)">12</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.FFT_LENGTH_LOG2&apos;)) - 1)">5</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -702,53 +622,6 @@
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
             <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.MAG_WIDTH&apos;)) - 1)">31</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_left_fft_din</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.MAG_WIDTH&apos;)) - 1)">31</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_left_fft_rst</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_left_fft_we</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="((spirit:decode(id(&apos;MODELPARAM_VALUE.MAG_WIDTH&apos;)) / 8) - 1)">3</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -791,7 +664,7 @@
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.BRAM_READ_ADDR_WIDTH&apos;)) - 1)">12</spirit:left>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.FFT_LENGTH_LOG2&apos;)) - 1)">5</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -820,53 +693,6 @@
           </spirit:wireTypeDefs>
         </spirit:wire>
       </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_right_fft_din</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:decode(id(&apos;MODELPARAM_VALUE.MAG_WIDTH&apos;)) - 1)">31</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_right_fft_rst</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
-      <spirit:port>
-        <spirit:name>bram_right_fft_we</spirit:name>
-        <spirit:wire>
-          <spirit:direction>in</spirit:direction>
-          <spirit:vector>
-            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="((spirit:decode(id(&apos;MODELPARAM_VALUE.MAG_WIDTH&apos;)) / 8) - 1)">3</spirit:left>
-            <spirit:right spirit:format="long">0</spirit:right>
-          </spirit:vector>
-          <spirit:wireTypeDefs>
-            <spirit:wireTypeDef>
-              <spirit:typeName>std_logic_vector</spirit:typeName>
-              <spirit:viewNameRef>xilinx_anylanguagesynthesis</spirit:viewNameRef>
-              <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
-            </spirit:wireTypeDef>
-          </spirit:wireTypeDefs>
-        </spirit:wire>
-      </spirit:port>
     </spirit:ports>
     <spirit:modelParameters>
       <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
@@ -882,28 +708,23 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>FFT_LENGTH</spirit:name>
         <spirit:displayName>Fft Length</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FFT_LENGTH">256</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FFT_LENGTH">64</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>FFT_LENGTH_LOG2</spirit:name>
         <spirit:displayName>Fft Length Log2</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FFT_LENGTH_LOG2">8</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.FFT_LENGTH_LOG2">6</spirit:value>
       </spirit:modelParameter>
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>MAG_WIDTH</spirit:name>
         <spirit:displayName>Mag Width</spirit:displayName>
         <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.MAG_WIDTH">32</spirit:value>
       </spirit:modelParameter>
-      <spirit:modelParameter spirit:dataType="integer">
-        <spirit:name>BRAM_READ_ADDR_WIDTH</spirit:name>
-        <spirit:displayName>Bram Read Addr Width</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.BRAM_READ_ADDR_WIDTH">13</spirit:value>
-      </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
   <spirit:choices>
     <spirit:choice>
-      <spirit:name>choice_list_74b5137e</spirit:name>
+      <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
     </spirit:choice>
@@ -922,7 +743,7 @@
       <spirit:file>
         <spirit:name>hw/fft_wrapper.vhd</spirit:name>
         <spirit:fileType>vhdlSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_19885355</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_8e8bdc25</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -992,14 +813,14 @@
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/fft_wrapper_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/fft_wrapper_v1_3.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_6000ad08</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_06b0e348</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
-  <spirit:description>fft_wrapper_v1_0</spirit:description>
+  <spirit:description>fft_wrapper_v1_3</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>C_AXI_STREAM_DATA_WIDTH</spirit:name>
@@ -1014,22 +835,17 @@
     <spirit:parameter>
       <spirit:name>FFT_LENGTH</spirit:name>
       <spirit:displayName>Fft Length</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FFT_LENGTH">256</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FFT_LENGTH">64</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>FFT_LENGTH_LOG2</spirit:name>
       <spirit:displayName>Fft Length Log2</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FFT_LENGTH_LOG2">8</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.FFT_LENGTH_LOG2">6</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>MAG_WIDTH</spirit:name>
       <spirit:displayName>Mag Width</spirit:displayName>
       <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.MAG_WIDTH">32</spirit:value>
-    </spirit:parameter>
-    <spirit:parameter>
-      <spirit:name>BRAM_READ_ADDR_WIDTH</spirit:name>
-      <spirit:displayName>Bram Read Addr Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.BRAM_READ_ADDR_WIDTH">13</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
@@ -1050,13 +866,13 @@
       <xilinx:taxonomies>
         <xilinx:taxonomy>/UserIP</xilinx:taxonomy>
       </xilinx:taxonomies>
-      <xilinx:displayName>fft_wrapper_v1_0</xilinx:displayName>
+      <xilinx:displayName>fft_wrapper_v1_3</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:xpmLibraries>
         <xilinx:xpmLibrary>XPM_MEMORY</xilinx:xpmLibrary>
       </xilinx:xpmLibraries>
-      <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2026-05-31T14:14:24Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>6</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2026-06-02T20:20:48Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="ui.data.coregen.df@53f9797b_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.df@57ae9bd_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
@@ -1075,15 +891,81 @@
         <xilinx:tag xilinx:name="ui.data.coregen.df@99b0eb8_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.df@300e0b7f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.df@16930f3f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@72496b92_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@447c894a_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4c024969_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@420eb5b1_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4543e491_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@264c467d_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@a36d062_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@47257741_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3a787e31_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7ef635e2_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1796afa9_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4e2136b3_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@43c04ccc_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3cb3b0d1_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7b83f2f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@b6f5268_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@544f1183_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3ce98a65_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6946f869_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6dd89f86_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7cf9f10d_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7de9b240_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@70caf678_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@617f56a1_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@77d67d22_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@689a122_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6d2b30e2_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@2975675f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3cefa7fb_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@652bf7e7_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5adaf9d0_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@61f1fb2f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1e3827ce_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@43b1fc57_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6adbc522_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@215c558d_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@542d8062_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@7f7a7175_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@75372c9_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@19e2af35_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@46b55ce5_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@675414d8_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@31276be1_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@300cfbb2_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5471f770_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@23b245a6_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@61f3a6cb_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@ae57d6e_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@16b65eb0_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@37f5c119_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5b73a54d_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1b61b0b9_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@79c15ce0_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5e73e496_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@55b36194_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@6a758ccb_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@5a4ff489_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@430b53f4_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@40ae473f_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@4f822401_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@8e8295_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1c690905_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@47fb4a8a_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@368a7675_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@1ebf8f7a_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.df@3c9d5b8_ARCHIVE_LOCATION">o:/documents/engs128/engs128-final-project/audio-path</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2021.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e530cfdc"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="38ba08d8"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="58e497d0"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="28c15981"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="4d1a1c6f"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="e7bba290"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="ac55f9ed"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="02d6a559"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="d6d675e7"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="c478c6dc"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
