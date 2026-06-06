@@ -17,8 +17,13 @@ entity audio_video_filter is
 	generic (
 	    C_S00_AXI_DATA_WIDTH	: integer	:= 32;
 		C_S00_AXI_ADDR_WIDTH	: integer	:= 4;
+		
+		FFT_LENGTH : integer := 64; 
+		FFT_LENGTH_LOG2 : integer := 6;
+		MAG_WIDTH : integer := 32; 
 	    
-		DATA_WIDTH	: integer	:= 24
+		DATA_WIDTH	: integer	:= 24; 
+		BIN_HEIGHT : integer := 12
 	);
 	port (
 	
@@ -42,87 +47,49 @@ entity audio_video_filter is
 		m00_axis_tready   : in std_logic; 
 		m00_axis_tuser    : out std_logic;
 		
-		-- Ports of Axi Responder/Slave Bus Interface S00_AXI (PS Clock)
-		s00_axi_aclk	: in std_logic;
-		s00_axi_aresetn	: in std_logic;
-		s00_axi_awaddr	: in std_logic_vector(C_S00_AXI_ADDR_WIDTH-1 downto 0);
-		s00_axi_awprot	: in std_logic_vector(2 downto 0);
-		s00_axi_awvalid	: in std_logic;
-		s00_axi_awready	: out std_logic;
-		s00_axi_wdata	: in std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
-		s00_axi_wstrb	: in std_logic_vector((C_S00_AXI_DATA_WIDTH/8)-1 downto 0);
-		s00_axi_wvalid	: in std_logic;
-		s00_axi_wready	: out std_logic;
-		s00_axi_bresp	: out std_logic_vector(1 downto 0);
-		s00_axi_bvalid	: out std_logic;
-		s00_axi_bready	: in std_logic;
-		s00_axi_araddr	: in std_logic_vector(C_S00_AXI_ADDR_WIDTH-1 downto 0);
-		s00_axi_arprot	: in std_logic_vector(2 downto 0);
-		s00_axi_arvalid	: in std_logic;
-		s00_axi_arready	: out std_logic;
-		s00_axi_rdata	: out std_logic_vector(C_S00_AXI_DATA_WIDTH-1 downto 0);
-		s00_axi_rresp	: out std_logic_vector(1 downto 0);
-		s00_axi_rvalid	: out std_logic;
-		s00_axi_rready	: in std_logic
+		red_effect_en : in std_logic;
+		green_effect_en : in std_logic; 
+		blue_effect_en : in std_logic; 
+		left_right_sw : in std_logic; 
+		 
+		timing_hsync : in std_logic;
+		timing_vsync : in std_logic; 
+		timing_fsync : in std_logic; 
+		
+        left_fft_din : in std_logic_vector(MAG_WIDTH - 1 downto 0); 
+        left_fft_bin : out std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0); 
+        left_fft_read : out std_logic; 
+        
+        right_fft_din : in std_logic_vector(MAG_WIDTH - 1 downto 0); 
+        right_fft_bin : out std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0); 
+        right_fft_read : out std_logic
 	);
 end audio_video_filter;
+
 
 ----------------------------------------------------------------------------
 -- Architecture Definition 
 architecture Behavioral of audio_video_filter is
 
-component audio_video_filter_axi is
-    generic (
-    C_S_AXI_DATA_WIDTH	: integer	:= C_S00_AXI_DATA_WIDTH;
-    C_S_AXI_ADDR_WIDTH	: integer	:= C_S00_AXI_ADDR_WIDTH
-    );
-    port (
-    ----------------------------------------------------------------------------
-    -- User-defined ports
-    slv_reg0_out  : out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0); 
-    slv_reg1_out  : out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0); 
-    slv_reg2_out  : out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0); 
-    slv_reg3_out  : out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    ----------------------------------------------------------------------------
-    S_AXI_ACLK	: in std_logic;
-    S_AXI_ARESETN	: in std_logic;
-    S_AXI_AWADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
-    S_AXI_AWPROT	: in std_logic_vector(2 downto 0);
-    S_AXI_AWVALID	: in std_logic;
-    S_AXI_AWREADY	: out std_logic;
-    S_AXI_WDATA	: in std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-    S_AXI_WSTRB	: in std_logic_vector((C_S_AXI_DATA_WIDTH/8)-1 downto 0);
-    S_AXI_WVALID	: in std_logic;
-    S_AXI_WREADY	: out std_logic;
-    S_AXI_BRESP	: out std_logic_vector(1 downto 0);
-    S_AXI_BVALID	: out std_logic;
-    S_AXI_BREADY	: in std_logic;
-    S_AXI_ARADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
-    S_AXI_ARPROT	: in std_logic_vector(2 downto 0);
-    S_AXI_ARVALID	: in std_logic;
-    S_AXI_ARREADY	: out std_logic;
-    S_AXI_RDATA	: out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-    S_AXI_RRESP	: out std_logic_vector(1 downto 0);
-    S_AXI_RVALID	: out std_logic;
-    S_AXI_RREADY	: in std_logic
-    );
-end component;
+signal left_mag, right_mag : unsigned(MAG_WIDTH - 1 downto 0) := (others => '0'); 
+signal red_gain, green_gain, blue_gain : unsigned(15 downto 0) := (others => '0'); 
 
-signal slv_reg0, slv_reg1, slv_reg2, slv_reg3 : std_logic_vector(C_S00_AXI_DATA_WIDTH - 1 downto 0) := (others => '0'); 
+signal row_count : unsigned(15 downto 0) := (others => '0');
+signal bin_count : unsigned(FFT_LENGTH_LOG2 - 1 downto 0) := (others => '0'); 
 
--- Synchronized gain (Q4.12 fixed point)
-signal r_gain_meta, r_gain_sync, g_gain_meta, g_gain_sync, b_gain_meta, b_gain_sync : unsigned(15 downto 0) := (others => '0'); 
+signal prev_fsync, prev_hsync : std_logic := '0'; 
+attribute ASYNC_REG : string;
+signal fsync_meta, fsync_reg, hsync_meta, hsync_reg : std_logic := '0';
 
-attribute ASYNC_REG : string; 
-attribute ASYNC_REG of r_gain_meta : signal is "TRUE"; 
-attribute ASYNC_REG of r_gain_sync : signal is "TRUE";
-attribute ASYNC_REG of g_gain_meta : signal is "TRUE"; 
-attribute ASYNC_REG of g_gain_sync : signal is "TRUE";
-attribute ASYNC_REG of b_gain_meta : signal is "TRUE"; 
-attribute ASYNC_REG of b_gain_sync : signal is "TRUE";
-attribute ASYNC_REG of slv_reg0 : signal is "TRUE";
-attribute ASYNC_REG of slv_reg1 : signal is "TRUE";
-attribute ASYNC_REG of slv_reg2 : signal is "TRUE";
+attribute ASYNC_REG of fsync_meta : signal is "TRUE";
+attribute ASYNC_REG of fsync_reg : signal is "TRUE";
+attribute ASYNC_REG of hsync_meta : signal is "TRUE";
+attribute ASYNC_REG of hsync_reg : signal is "TRUE";
+
+signal left_fft_read_addr, right_fft_read_addr : std_logic_vector(FFT_LENGTH_LOG2 - 1 downto 0) := (others => '0'); 
+signal left_fft_read_en, right_fft_read_en : std_logic := '0'; 
+signal fft_read_pending : std_logic := '0';
+
 
 signal r_in_reg, g_in_reg, b_in_reg : unsigned(7 downto 0) := (others => '0'); 
 signal v0, u0, l0 : std_logic; -- axi-stream signal
@@ -148,68 +115,124 @@ begin
     end if; 
 end function; 
 
+function mag_to_gain(mag : unsigned(MAG_WIDTH - 1 downto 0)) return unsigned is
+    variable clamped : unsigned(11 downto 0); 
+begin 
+    if mag(MAG_WIDTH - 1 downto 22) = 0 then 
+        clamped := mag(21 downto 10);
+    else 
+        clamped := x"FFF"; 
+    end if;
+    
+    return x"1000" - resize(clamped(11 downto 1), 16);
+end function; 
+
 
 ----------------------------------------------------------------------------
 begin
 
-audio_video_filter_axi_inst : audio_video_filter_axi
-generic map (
-    C_S_AXI_DATA_WIDTH	=> C_S00_AXI_DATA_WIDTH,
-    C_S_AXI_ADDR_WIDTH	=> C_S00_AXI_ADDR_WIDTH
-)
-port map (
-    slv_reg0_out => slv_reg0,
-    slv_reg1_out => slv_reg1,
-    slv_reg2_out => slv_reg2,
-    slv_reg3_out => slv_reg3,
-    S_AXI_ACLK	=> s00_axi_aclk,
-    S_AXI_ARESETN	=> s00_axi_aresetn,
-    S_AXI_AWADDR	=> s00_axi_awaddr,
-    S_AXI_AWPROT	=> s00_axi_awprot,
-    S_AXI_AWVALID	=> s00_axi_awvalid,
-    S_AXI_AWREADY	=> s00_axi_awready,
-    S_AXI_WDATA	=> s00_axi_wdata,
-    S_AXI_WSTRB	=> s00_axi_wstrb,
-    S_AXI_WVALID	=> s00_axi_wvalid,
-    S_AXI_WREADY	=> s00_axi_wready,
-    S_AXI_BRESP	=> s00_axi_bresp,
-    S_AXI_BVALID	=> s00_axi_bvalid,
-    S_AXI_BREADY	=> s00_axi_bready,
-    S_AXI_ARADDR	=> s00_axi_araddr,
-    S_AXI_ARPROT	=> s00_axi_arprot,
-    S_AXI_ARVALID	=> s00_axi_arvalid,
-    S_AXI_ARREADY	=> s00_axi_arready,
-    S_AXI_RDATA	=> s00_axi_rdata,
-    S_AXI_RRESP	=> s00_axi_rresp,
-    S_AXI_RVALID	=> s00_axi_rvalid,
-    S_AXI_RREADY	=> s00_axi_rready
-);
-
-
-cdc_proc: process (s00_axis_aclk)
+cdc_sync_proc: process (s00_axis_aclk) 
 begin 
-    if (rising_edge(s00_axis_aclk)) then 
-        if (s00_axis_aresetn = '0' or m00_axis_aresetn = '0') then 
-            r_gain_meta <= x"1000";
-            r_gain_sync <= x"1000"; 
-            
-            g_gain_meta <= x"1000";
-            g_gain_sync <= x"1000"; 
-            
-            b_gain_meta <= x"1000";
-            b_gain_sync <= x"1000"; 
-        else 
-            r_gain_sync <= r_gain_meta; 
-            r_gain_meta <= unsigned(slv_reg0(15 downto 0));
-            
-            g_gain_sync <= g_gain_meta; 
-            g_gain_meta <= unsigned(slv_reg1(15 downto 0));
-            
-            b_gain_sync <= b_gain_meta; 
-            b_gain_meta <= unsigned(slv_reg2(15 downto 0));
-        end if; 
+    if rising_edge(s00_axis_aclk) then 
+        fsync_meta <= timing_fsync; 
+        fsync_reg <= fsync_meta; 
+        hsync_meta <= timing_hsync; 
+        hsync_reg <= hsync_meta;
     end if; 
-end process;
+end process; 
+
+----------------------------------------------------------------------------
+-- Row counter: reset on fsync rising edge, increment on hsync rising edge
+----------------------------------------------------------------------------
+row_counter_proc: process(s00_axis_aclk)
+begin
+    if rising_edge(s00_axis_aclk) then
+        if s00_axis_aresetn = '0' or m00_axis_aresetn = '0' then
+            row_count        <= (others => '0');
+            bin_count        <= (others => '0');
+            prev_fsync       <= '0';
+            prev_hsync       <= '0';
+            left_fft_read_en  <= '0';
+            right_fft_read_en <= '0';
+            fft_read_pending  <= '0';
+
+        else
+            -- Default: deassert read enables and pending
+            left_fft_read_en  <= '0';
+            right_fft_read_en <= '0';
+            fft_read_pending  <= '0';
+
+            -- fsync rising edge: reset row counter
+            if prev_fsync = '0' and fsync_reg = '1' then
+                row_count <= (others => '0');
+                bin_count <= (others => '0');
+
+            -- hsync rising edge: increment row, issue FFT read if on bin boundary
+            elsif prev_hsync = '0' and hsync_reg = '1' then
+                if row_count = BIN_HEIGHT - 1 then 
+                    row_count <= (others => '0'); 
+                    bin_count <= bin_count + 1; 
+                    
+                    left_fft_read_en <= '1'; 
+                    right_fft_read_en <= '1'; 
+                    fft_read_pending <= '1'; 
+                else 
+                    row_count <= row_count + 1; 
+                end if;
+            end if;
+
+            -- One cycle after read enable: latch returned BRAM data into gain regs
+            if fft_read_pending = '1' then
+                left_mag  <= unsigned(left_fft_din);
+                right_mag <= unsigned(right_fft_din);
+            end if;
+
+            prev_fsync <= fsync_reg;
+            prev_hsync <= hsync_reg;
+        end if;
+    end if;
+end process row_counter_proc;
+
+-- Drive FFT address and read enable outputs combinatorially
+left_fft_bin  <= std_logic_vector(bin_count);
+right_fft_bin <= std_logic_vector(bin_count);
+left_fft_read  <= left_fft_read_en;
+right_fft_read <= right_fft_read_en;
+
+gain_assign_proc: process(s00_axis_aclk)
+begin 
+    if rising_edge(s00_axis_aclk) then 
+        if s00_axis_aresetn = '0' or m00_axis_aresetn = '0' then 
+            red_gain <= x"1000";
+            green_gain <= x"1000";
+            blue_gain <= x"1000"; 
+        else 
+            if red_effect_en = '0' then 
+                red_gain <= x"1000";
+            elsif left_right_sw = '0' then 
+                red_gain <= mag_to_gain(left_mag);
+            else 
+                red_gain <= mag_to_gain(right_mag); 
+            end if; 
+            
+            if green_effect_en = '0' then 
+                green_gain <= x"1000";
+            elsif left_right_sw = '0' then 
+                green_gain <= mag_to_gain(left_mag);
+            else 
+                green_gain <= mag_to_gain(right_mag); 
+            end if;
+            
+            if blue_effect_en = '0' then 
+                blue_gain <= x"1000";
+            elsif left_right_sw = '0' then 
+                blue_gain <= mag_to_gain(left_mag);
+            else 
+                blue_gain <= mag_to_gain(right_mag); 
+            end if;
+        end if;
+    end if; 
+end process gain_assign_proc; 
 
 stage_0_proc: process(s00_axis_aclk)
 begin 
@@ -249,9 +272,10 @@ begin
             l1 <= '0'; 
             k1 <= (others => '0');
         elsif m00_axis_tready = '1' then 
-            r_prod <= resize(r_in_reg * r_gain_sync, 24); 
-            g_prod <= resize(g_in_reg * g_gain_sync, 24); 
-            b_prod <= resize(b_in_reg * b_gain_sync, 24); 
+            
+            r_prod <= resize(r_in_reg * red_gain, 24); 
+            g_prod <= resize(g_in_reg * green_gain, 24); 
+            b_prod <= resize(b_in_reg * blue_gain, 24); 
             
             v1 <= v0; 
             u1 <= u0; 
